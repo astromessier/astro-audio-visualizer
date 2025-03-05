@@ -9,6 +9,7 @@ import WaveformVisualizer from './WaveformVisualizer';
 import SpectrumVisualizer from './SpectrumVisualizer';
 import TimeSeriesVisualizer from './TimeSeriesVisualizer';
 import SettingsPanel from './SettingsPanel';
+import { useToast } from "@/hooks/use-toast";
 
 const AudioVisualizer = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -21,6 +22,9 @@ const AudioVisualizer = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [recordedData, setRecordedData] = useState<Float32Array[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackIndex, setPlaybackIndex] = useState(0);
+  const playbackRef = useRef<number | null>(null);
+  const { toast } = useToast();
 
   // Setup audio context and analyser
   useEffect(() => {
@@ -75,13 +79,18 @@ const AudioVisualizer = () => {
   const handleStartRecording = () => {
     setIsRecording(true);
     setRecordedData([]);
+    toast({
+      title: "Recording Started",
+      description: "Capturing audio input from your device",
+    });
   };
 
   const handleStopRecording = () => {
     setIsRecording(false);
-    if (audioContext) {
-      // Keep the context but stop recording
-    }
+    toast({
+      title: "Recording Stopped",
+      description: `Captured ${recordedData.length} data points`,
+    });
   };
 
   const handleSaveRecording = () => {
@@ -111,22 +120,60 @@ const AudioVisualizer = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    toast({
+      title: "Recording Saved",
+      description: "Your data has been saved to a file",
+    });
   };
 
+  // Improved playback logic with animation frame control
   const handlePlayback = () => {
     if (recordedData.length === 0) return;
-    setIsPlaying(true);
     
-    // Implement playback logic here
-    // For simplicity, we'll just visualize the first chunk of recorded data
-    if (recordedData.length > 0) {
-      setAudioData(recordedData[0]);
-    }
+    setIsPlaying(true);
+    setPlaybackIndex(0);
+    
+    const playNextFrame = () => {
+      if (playbackIndex < recordedData.length) {
+        setAudioData(recordedData[playbackIndex]);
+        setPlaybackIndex(prev => prev + 1);
+        playbackRef.current = requestAnimationFrame(playNextFrame);
+      } else {
+        handleStopPlayback(); // Auto-stop when playback ends
+      }
+    };
+    
+    playbackRef.current = requestAnimationFrame(playNextFrame);
+    
+    toast({
+      title: "Playback Started",
+      description: "Playing back recorded data",
+    });
   };
 
   const handleStopPlayback = () => {
+    if (playbackRef.current) {
+      cancelAnimationFrame(playbackRef.current);
+      playbackRef.current = null;
+    }
     setIsPlaying(false);
+    setPlaybackIndex(0);
+    
+    toast({
+      title: "Playback Stopped",
+      description: "Playback has been stopped",
+    });
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (playbackRef.current) {
+        cancelAnimationFrame(playbackRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="flex flex-col h-full w-full max-w-7xl mx-auto px-4 py-6 space-y-6 animate-fade-in">
