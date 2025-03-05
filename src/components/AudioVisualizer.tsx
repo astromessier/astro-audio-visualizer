@@ -1,9 +1,10 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Waveform, Mic, Activity, Save, Play, Square, Settings, ChevronDown, ChevronUp } from "lucide-react";
+import { AudioWaveform, Mic, Activity, Save, Play, Square, Settings, ChevronDown, ChevronUp } from "lucide-react";
 import WaveformVisualizer from './WaveformVisualizer';
 import SpectrumVisualizer from './SpectrumVisualizer';
 import TimeSeriesVisualizer from './TimeSeriesVisualizer';
@@ -179,7 +180,7 @@ const AudioVisualizer = () => {
           <div className="px-4 pt-4">
             <TabsList className="grid grid-cols-3 bg-astro-dark">
               <TabsTrigger value="waveform" className="data-[state=active]:bg-astro-accent data-[state=active]:text-white transition-all duration-300">
-                <Waveform className="mr-2 h-4 w-4" />
+                <AudioWaveform className="mr-2 h-4 w-4" />
                 Waveform
               </TabsTrigger>
               <TabsTrigger value="spectrum" className="data-[state=active]:bg-astro-accent data-[state=active]:text-white transition-all duration-300">
@@ -187,7 +188,7 @@ const AudioVisualizer = () => {
                 Spectrum
               </TabsTrigger>
               <TabsTrigger value="timeSeries" className="data-[state=active]:bg-astro-accent data-[state=active]:text-white transition-all duration-300">
-                <Waveform className="mr-2 h-4 w-4" />
+                <AudioWaveform className="mr-2 h-4 w-4" />
                 Time Series
               </TabsTrigger>
             </TabsList>
