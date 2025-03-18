@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -8,6 +7,7 @@ import { AudioWaveform, Mic, Activity, Save, Play, Square, Settings, ChevronDown
 import WaveformVisualizer from './WaveformVisualizer';
 import SpectrumVisualizer from './SpectrumVisualizer';
 import TimeSeriesVisualizer from './TimeSeriesVisualizer';
+import SpectrographVisualizer from './SpectrographVisualizer';
 import SettingsPanel from './SettingsPanel';
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,7 +26,6 @@ const AudioVisualizer = () => {
   const playbackRef = useRef<number | null>(null);
   const { toast } = useToast();
 
-  // Setup audio context and analyser
   useEffect(() => {
     if (isRecording && !audioContext) {
       const context = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -47,7 +46,6 @@ const AudioVisualizer = () => {
     }
   }, [isRecording, audioContext]);
 
-  // Process audio data
   useEffect(() => {
     if (!analyser || !isRecording) return;
 
@@ -56,14 +54,11 @@ const AudioVisualizer = () => {
     const updateData = () => {
       if (!isRecording || !analyser) return;
       
-      // Get time domain data
       analyser.getFloatTimeDomainData(dataArray);
       
-      // Apply gain
       const amplifiedData = dataArray.map(value => value * gain);
       setAudioData(new Float32Array(amplifiedData));
       
-      // Save data if recording
       setRecordedData(prev => [...prev, new Float32Array(amplifiedData)]);
       
       requestAnimationFrame(updateData);
@@ -96,7 +91,6 @@ const AudioVisualizer = () => {
   const handleSaveRecording = () => {
     if (recordedData.length === 0) return;
     
-    // Create a Blob with the recorded data
     const mergedArray = new Float32Array(recordedData.reduce((acc, curr) => acc + curr.length, 0));
     let offset = 0;
     
@@ -107,11 +101,9 @@ const AudioVisualizer = () => {
     
     const blob = new Blob([mergedArray], { type: 'application/octet-stream' });
     
-    // Create download link
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     
-    // Get current date and time for filename
     const now = new Date();
     const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
     
@@ -127,7 +119,6 @@ const AudioVisualizer = () => {
     });
   };
 
-  // Improved playback logic with animation frame control
   const handlePlayback = () => {
     if (recordedData.length === 0) return;
     
@@ -140,7 +131,7 @@ const AudioVisualizer = () => {
         setPlaybackIndex(prev => prev + 1);
         playbackRef.current = requestAnimationFrame(playNextFrame);
       } else {
-        handleStopPlayback(); // Auto-stop when playback ends
+        handleStopPlayback();
       }
     };
     
@@ -166,7 +157,6 @@ const AudioVisualizer = () => {
     });
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (playbackRef.current) {
@@ -225,7 +215,7 @@ const AudioVisualizer = () => {
       <Card className="flex-1 overflow-hidden neo-morphism bg-astro-dark border-astro-grid p-1">
         <Tabs defaultValue="waveform" onValueChange={setVisualizationType} className="h-full flex flex-col">
           <div className="px-4 pt-4">
-            <TabsList className="grid grid-cols-3 bg-astro-dark">
+            <TabsList className="grid grid-cols-4 bg-astro-dark">
               <TabsTrigger value="waveform" className="data-[state=active]:bg-astro-accent data-[state=active]:text-white transition-all duration-300">
                 <AudioWaveform className="mr-2 h-4 w-4" />
                 Waveform
@@ -233,6 +223,10 @@ const AudioVisualizer = () => {
               <TabsTrigger value="spectrum" className="data-[state=active]:bg-astro-accent data-[state=active]:text-white transition-all duration-300">
                 <Activity className="mr-2 h-4 w-4" />
                 Spectrum
+              </TabsTrigger>
+              <TabsTrigger value="spectrograph" className="data-[state=active]:bg-astro-accent data-[state=active]:text-white transition-all duration-300">
+                <Activity className="mr-2 h-4 w-4" />
+                Spectrograph
               </TabsTrigger>
               <TabsTrigger value="timeSeries" className="data-[state=active]:bg-astro-accent data-[state=active]:text-white transition-all duration-300">
                 <AudioWaveform className="mr-2 h-4 w-4" />
@@ -248,6 +242,10 @@ const AudioVisualizer = () => {
             
             <TabsContent value="spectrum" className="h-full animate-slide-up">
               <SpectrumVisualizer audioData={audioData} isActive={visualizationType === 'spectrum'} />
+            </TabsContent>
+            
+            <TabsContent value="spectrograph" className="h-full animate-slide-up">
+              <SpectrographVisualizer audioData={audioData} isActive={visualizationType === 'spectrograph'} />
             </TabsContent>
             
             <TabsContent value="timeSeries" className="h-full animate-slide-up">
